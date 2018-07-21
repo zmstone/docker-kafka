@@ -30,7 +30,7 @@ COPY truststore.jks /etc/kafka/truststore.jks
 COPY jaas-plain.conf /etc/kafka/jaas-plain.conf
 COPY jaas-plain-scram.conf /etc/kafka/jaas-plain-scram.conf
 
-ENV PATH /opt/kafka/bin:$PAHT
+ENV PATH /opt/kafka/bin:$PATH
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

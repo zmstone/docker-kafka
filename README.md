@@ -7,7 +7,7 @@ make
 ## Start Zookeeper
 
 ```sh
-docker run -d -p 2181:2181 --name zookeeper zmstone/kafka run zookeeper
+docker run -d -p 2181:2181 --name zookeeper zmstone/kafka:1.1 run zookeeper
 ```
 
 ## Start Kafka
@@ -21,7 +21,7 @@ docker run -d -e BROKER_ID=0 \
               -p 9092-9095:9092-9095 \
               --link zookeeper \
               --name kafka-1 \
-              zmstone/kafka run kafka
+              zmstone/kafka:1.1 run kafka
 ```
 
 ### Create Topic
