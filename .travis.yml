@@ -1,0 +1,18 @@
+sudo: required
+
+language: bash
+
+services:
+  - docker
+
+env:
+  secure: OCY9boBYglmeH2zocKqMPp34EFvrm5bUYHLeDjosMw84zk/L1wBFJplZ/Zx9/+RVInbowgkvi74/Un3ma1LzXTixY1Etj4+zPdCd25pCWUI5FlCyUODsCfKH/FvtZbXH49pruTur0/2vWVphIWibH0gGUUOXdLbIKHuoEwxUpR48PJOk28WY1cgi+k4qCLCyvPgcnZlz5q4z1vXa6dZqG+NbldTWnfToUzAeCQQzyYPHw3x0LgAPHAZzAG3IMzWH+ijlF3rvwYdgiHyrnzxnmB7DRfrzOK4ip+SjVSAmbk6w0DqO1bnKFHSIW2d+cYSlN18jclJfCqc/OlgTQd+HEI+WqxyrqH79QlKopYMAkN+BS650DFkFUJJCb5knO8Wp1WpL/zrkz6IVwcN8+UuZ+8SBFQzUb7pOqB+9QP27nRbDaB1zn7ALHwTxO9/g3EGQOQUr7X2Syv5hsReEpaWsCMxVHQ2UbPSBQ/aKW1F9r1myDAAxVZqW03J7hed7qFWF+CRzZJYCKa7FqEwe6jIcQRdyz5jkKn9jIgmJLvtARVU0oNvW3y6YS0f3xoR+P6c/OA0s3Dlcy5m4w2mmPRdBe1wOGl2Q5DSPykBonDgVopqubcVhUeByjiqFheqGXkMgAWOEx7ewd4lzCBy+L2fiBbiKzf44FxW6vmG6EgE74BQ=
+
+script:
+  - make build
+  - |
+    if [ "$TRAVIS_BRANCH" = "master" ]; then
+      echo "$DOCKER_PASSWORD" | docker login -u zmstone --password-stdin
+      make push
+    fi
+
