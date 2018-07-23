@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/zmstone/docker-kafka.svg?branch=master)](https://travis-ci.org/zmstone/docker-kafka)
 
+Originally developed as a part of https://github.com/klarna/brod
+
 ## Build
 
 make
