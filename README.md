@@ -1,5 +1,7 @@
 # Kafka and Zookeeper in Docker Container
 
+[![Build Status](https://travis-ci.org/zmstone/docker-kafka.svg?branch=master)](https://travis-ci.org/zmstone/docker-kafka)
+
 ## Build
 
 make
