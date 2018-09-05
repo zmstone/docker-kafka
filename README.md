@@ -16,6 +16,8 @@ docker run -d -p 2181:2181 --name zookeeper zmstone/kafka:1.1 run zookeeper
 
 ## Start Kafka
 
+Set `TOPICS` environment variable to have them created.
+
 ```sh
 docker run -d -e BROKER_ID=0 \
               -e PLAINTEXT_PORT=9092 \
@@ -25,10 +27,11 @@ docker run -d -e BROKER_ID=0 \
               -p 9092-9095:9092-9095 \
               --link zookeeper \
               --name kafka-1 \
+              -e TOPICS='topic-1:1,topic-2:2' \
               zmstone/kafka:1.1 run kafka
 ```
 
-### Create Topic
+### Create Topic After `docker run`
 
 ```
 create_topic() {
