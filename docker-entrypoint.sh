@@ -27,17 +27,16 @@ fi
 ipwithnetmask="$(ip -f inet addr show dev eth0 | awk '/inet / { print $2 }')"
 ipaddress="${ipwithnetmask%/*}"
 
-advertised_hostname="localhost"
-
+[ -z "$ADVERTISED_HOSTNAME" ] && ADVERTISED_HOSTNAME="localhost"
 [ -z "$PLAINTEXT_PORT" ] && PLAINTEXT_PORT=9092
 [ -z "$SSL_PORT" ] && SSL_PORT=9093
 [ -z "$SASL_SSL_PORT" ] && SASL_SSL_PORT=9095
 [ -z "$SASL_PLAINTEXT_PORT" ] && SASL_PLAINTEXT_PORT=9096
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$advertised_hostname:$PLAINTEXT_PORT,SSL:\/\/$advertised_hostname:$SSL_PORT/g" $prop_file
+  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT/g" $prop_file
   sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT/g" $prop_file
 else
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$advertised_hostname:$PLAINTEXT_PORT,SSL:\/\/$advertised_hostname:$SSL_PORT,SASL_SSL:\/\/$advertised_hostname:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/$advertised_hostname:$SASL_PLAINTEXT_PORT/g" $prop_file
+  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT,SASL_SSL:\/\/$ADVERTISED_HOSTNAME:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$SASL_PLAINTEXT_PORT/g" $prop_file
   sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT,SASL_SSL:\/\/:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/:$SASL_PLAINTEXT_PORT/g" $prop_file
   echo "sasl.enabled.mechanisms=PLAIN" >> $prop_file
 fi
