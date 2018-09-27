@@ -30,6 +30,7 @@ services:
     network_mode: service:pause
     environment:
       ADVERTISED_HOSTNAME: localhost
+      ZOOKEEPER_CONNECT: "localhost:2181"
       BROKER_ID: 1
       PLAINTEXT_PORT: 9092
       SSL_PORT: 9093
