@@ -27,19 +27,22 @@ fi
 ipwithnetmask="$(ip -f inet addr show dev eth0 | awk '/inet / { print $2 }')"
 ipaddress="${ipwithnetmask%/*}"
 
+[ -z "$ADVERTISED_HOSTNAME" ] && ADVERTISED_HOSTNAME="${ipaddress}"
 [ -z "$PLAINTEXT_PORT" ] && PLAINTEXT_PORT=9092
 [ -z "$SSL_PORT" ] && SSL_PORT=9093
 [ -z "$SASL_SSL_PORT" ] && SASL_SSL_PORT=9095
 [ -z "$SASL_PLAINTEXT_PORT" ] && SASL_PLAINTEXT_PORT=9096
+[ -z "$ZOOKEEPER_CONNECT" ] && ZOOKEEPER_CONNECT="zookeeper:2181"
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ipaddress:$PLAINTEXT_PORT,SSL:\/\/$ipaddress:$SSL_PORT/g" $prop_file
+  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT/g" $prop_file
   sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT/g" $prop_file
 else
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ipaddress:$PLAINTEXT_PORT,SSL:\/\/$ipaddress:$SSL_PORT,SASL_SSL:\/\/$ipaddress:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/$ipaddress:$SASL_PLAINTEXT_PORT/g" $prop_file
+  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT,SASL_SSL:\/\/$ADVERTISED_HOSTNAME:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$SASL_PLAINTEXT_PORT/g" $prop_file
   sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT,SASL_SSL:\/\/:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/:$SASL_PLAINTEXT_PORT/g" $prop_file
   echo "sasl.enabled.mechanisms=PLAIN" >> $prop_file
 fi
 
+sed -r -i "s/^zookeeper\.connect=.*/zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
 echo "sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512" >> $prop_file
 echo "offsets.topic.replication.factor=1" >> $prop_file
 echo "transaction.state.log.min.isr=1" >> $prop_file
@@ -55,7 +58,7 @@ fi
 
 wait_for_kafka() {
   echo '### waiting for kafka to be ready'
-  if ! kafka-topics.sh --zookeeper zookeeper --list >/dev/null 2>&1; then
+  if ! kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --list >/dev/null 2>&1; then
     wait_for_kafka
   fi
 }
@@ -63,7 +66,7 @@ wait_for_kafka() {
 create_topic() {
   TOPIC_NAME="$1"
   PARTITIONS="${2:-1}"
-  kafka-topics.sh --zookeeper zookeeper --create --partitions $PARTITIONS --replication-factor 1 --topic $TOPIC_NAME
+  kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --create --partitions $PARTITIONS --replication-factor 1 --topic $TOPIC_NAME
 }
 
 create_topics() {

@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  pause:
+    image: "gcr.io/google_containers/pause-amd64:3.0"
+    networks:
+      - pausenet
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+      - "9095:9095"
+    container_name: pause
+  zookeeper:
+    depends_on:
+      - pause
+    image: "zmstone/kafka:1.1"
+    container_name: zookeeper
+    command: run zookeeper
+    ipc: container:pause
+    network_mode: service:pause
+  kafka:
+    depends_on:
+      - pause
+      - zookeeper
+    image: "zmstone/kafka:1.1"
+    container_name: 'kafka'
+    ipc: container:pause
+    network_mode: service:pause
+    environment:
+      ADVERTISED_HOSTNAME: localhost
+      ZOOKEEPER_CONNECT: "localhost:2181"
+      BROKER_ID: 1
+      PLAINTEXT_PORT: 9092
+      SSL_PORT: 9093
+      SASL_SSL_PORT: 9094
+      SASL_PLAINTEXT_PORT: 9095
+      TOPICS: "${TOPICS}"
+
+networks:
+  pausenet:
