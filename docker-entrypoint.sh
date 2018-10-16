@@ -77,7 +77,7 @@ create_topics() {
     partitions="$(echo $topic_partition | cut -d: -f2)"
     [ $partitions == "" ] && partitions=1
     ## ignore error because the topic might be alredy there when working with a running zookeeper
-    create_topic $topic $partition || true
+    create_topic $topic $partitions || true
   done
 }
 
