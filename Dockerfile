@@ -10,12 +10,7 @@ ENV SCALA_VERSION 2.11
 ARG KAFKA_VERSION
 ENV KAFKA_VERSION ${KAFKA_VERSION}
 
-RUN case $KAFKA_VERSION in \
-      0.9*) \
-        DOWNLOAD_URL_PREFIX="https://archive.apache.org/dist/kafka";; \
-      *) \
-        DOWNLOAD_URL_PREFIX="https://apache.org/dist/kafka";; \
-    esac && \
+RUN DOWNLOAD_URL_PREFIX="https://archive.apache.org/dist/kafka" && \
     KAFKA_DOWNLOAD_URL="$DOWNLOAD_URL_PREFIX/${KAFKA_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz" && \
     wget -q "${KAFKA_DOWNLOAD_URL}" -O /tmp/kafka_"$SCALA_VERSION"-"$KAFKA_VERSION".tgz && \
     tar xfz /tmp/kafka_"$SCALA_VERSION"-"$KAFKA_VERSION".tgz -C /opt && \

@@ -33,6 +33,16 @@ ipaddress="${ipwithnetmask%/*}"
 [ -z "$SASL_SSL_PORT" ] && SASL_SSL_PORT=9095
 [ -z "$SASL_PLAINTEXT_PORT" ] && SASL_PLAINTEXT_PORT=9096
 [ -z "$ZOOKEEPER_CONNECT" ] && ZOOKEEPER_CONNECT="zookeeper:2181"
+
+ZOOKEEPER_HOST=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f1)
+ZOOKEEPER_IP=$(getent hosts $ZOOKEEPER_HOST | awk '{ print $1 }')
+ZOOKEEPER_PORT=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f2)
+
+until echo > /dev/tcp/$ZOOKEEPER_IP/$ZOOKEEPER_PORT; do
+  >&2 echo "zookeeper is not ready, sleep wait"
+  sleep 1
+done
+
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
   sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT/g" $prop_file
   sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT/g" $prop_file
