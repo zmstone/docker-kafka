@@ -35,7 +35,7 @@ ipaddress="${ipwithnetmask%/*}"
 [ -z "$ZOOKEEPER_CONNECT" ] && ZOOKEEPER_CONNECT="zookeeper:2181"
 
 ZOOKEEPER_HOST=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f1)
-ZOOKEEPER_IP=$(getent hosts $ZOOKEEPER_HOST | awk '{ print $1 }')
+ZOOKEEPER_IP=$(getent ahostsv4 $ZOOKEEPER_HOST | head -1 | awk '{ print $1 }')
 ZOOKEEPER_PORT=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f2)
 
 until echo > /dev/tcp/$ZOOKEEPER_IP/$ZOOKEEPER_PORT; do
