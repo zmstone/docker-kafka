@@ -8,35 +8,84 @@ services:
     ports:
       - "2181:2181"
       - "9092:9092"
-      - "9093:9093"
-      - "9094:9094"
-      - "9095:9095"
+      - "9192:9192"
+      - "9090:9090"
     container_name: pause
   zookeeper:
     depends_on:
       - pause
-    image: "zmstone/kafka:1.1"
+    image: "zmstone/kafka:0.11"
     container_name: zookeeper
     command: run zookeeper
     ipc: container:pause
     network_mode: service:pause
-  kafka:
+  kafka1:
     depends_on:
       - pause
       - zookeeper
-    image: "zmstone/kafka:1.1"
-    container_name: 'kafka'
+    image: "zmstone/kafka:0.11"
+    container_name: 'kafka1'
     ipc: container:pause
     network_mode: service:pause
     environment:
-      ADVERTISED_HOSTNAME: localhost
+      ADVERTISED_HOSTNAME: "127.0.0.1"
       ZOOKEEPER_CONNECT: "localhost:2181"
       BROKER_ID: 1
       PLAINTEXT_PORT: 9092
       SSL_PORT: 9093
       SASL_SSL_PORT: 9094
       SASL_PLAINTEXT_PORT: 9095
-      TOPICS: "${TOPICS}"
-
+  kafka2:
+    depends_on:
+      - pause
+      - zookeeper
+    image: "zmstone/kafka:0.11"
+    container_name: 'kafka2'
+    ipc: container:pause
+    network_mode: service:pause
+    environment:
+      ADVERTISED_HOSTNAME: "127.0.0.2"
+      ZOOKEEPER_CONNECT: "localhost:2181"
+      BROKER_ID: 2
+      PLAINTEXT_PORT: 9192
+      SSL_PORT: 9193
+      SASL_SSL_PORT: 9194
+      SASL_PLAINTEXT_PORT: 9195
+  kafka3:
+    depends_on:
+      - pause
+      - zookeeper
+    image: "zmstone/kafka:0.11"
+    container_name: 'kafka3'
+    ipc: container:pause
+    network_mode: service:pause
+    environment:
+      ADVERTISED_HOSTNAME: "127.0.0.3"
+      ZOOKEEPER_CONNECT: "localhost:2181"
+      BROKER_ID: 3
+      PLAINTEXT_PORT: 9292
+      SSL_PORT: 9293
+      SASL_SSL_PORT: 9294
+      SASL_PLAINTEXT_PORT: 9295
+  kafka4:
+    depends_on:
+      - pause
+      - zookeeper
+      - kafka1
+      - kafka2
+      - kafka3
+    image: "zmstone/kafka:0.11"
+    container_name: 'kafka4'
+    ipc: container:pause
+    network_mode: service:pause
+    environment:
+      ADVERTISED_HOSTNAME: "127.0.0.4"
+      ZOOKEEPER_CONNECT: "localhost:2181"
+      BROKER_ID: 4
+      PLAINTEXT_PORT: 9392
+      SSL_PORT: 9393
+      SASL_SSL_PORT: 9394
+      SASL_PLAINTEXT_PORT: 9395
+      TOPICS: "__CruiseControlMetrics:12:2,foo:9:2,${TOPICS}"
 networks:
   pausenet:

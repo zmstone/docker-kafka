@@ -22,6 +22,7 @@ prop_file="/etc/kafka/server.properties"
 if [ ! -z "$BROKER_ID" ]; then
   echo "broker id: $BROKER_ID"
   sed -r -i "s/^(broker.id)=(.*)/\1=$BROKER_ID/g" $prop_file
+  sed -r -i "s/^(broker.rack)=(.*)/\1=$BROKER_ID/g" $prop_file
 fi
 
 ipwithnetmask="$(ip -f inet addr show dev eth0 | awk '/inet / { print $2 }')"
@@ -54,9 +55,9 @@ fi
 
 sed -r -i "s/^zookeeper\.connect=.*/zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
 echo "sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512" >> $prop_file
-echo "offsets.topic.replication.factor=1" >> $prop_file
-echo "transaction.state.log.min.isr=1" >> $prop_file
-echo "transaction.state.log.replication.factor=1" >> $prop_file
+echo "offsets.topic.replication.factor=2" >> $prop_file
+echo "transaction.state.log.min.isr=2" >> $prop_file
+echo "transaction.state.log.replication.factor=2" >> $prop_file
 
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
   JAAS_CONF=""
@@ -76,7 +77,8 @@ wait_for_kafka() {
 create_topic() {
   TOPIC_NAME="$1"
   PARTITIONS="${2:-1}"
-  kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --create --partitions $PARTITIONS --replication-factor 1 --topic $TOPIC_NAME
+  RF="${3:-1}"
+  kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --create --partitions $PARTITIONS --replication-factor $RF --topic $TOPIC_NAME
 }
 
 create_topics() {
@@ -85,9 +87,11 @@ create_topics() {
   for topic_partition in $LINES; do
     topic="$(echo $topic_partition | cut -d: -f1)"
     partitions="$(echo $topic_partition | cut -d: -f2)"
+    rf="$(echo $topic_partition | cut -d: -f3)"
     [ $partitions == "" ] && partitions=1
+    [ $rf == "" ] && rf=1
     ## ignore error because the topic might be alredy there when working with a running zookeeper
-    create_topic $topic $partitions || true
+    create_topic $topic $partitions $rf || true
   done
 }
 
