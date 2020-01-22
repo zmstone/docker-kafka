@@ -16,7 +16,7 @@ services:
   zookeeper:
     depends_on:
       - pause
-    image: "zmstone/kafka:0.11"
+    image: "zmstone/kafka:1.1-cc"
     container_name: zookeeper
     command: run zookeeper
     ipc: container:pause
@@ -25,7 +25,7 @@ services:
     depends_on:
       - pause
       - zookeeper
-    image: "zmstone/kafka:0.11"
+    image: "zmstone/kafka:1.1-cc"
     container_name: 'kafka1'
     ipc: container:pause
     network_mode: service:pause
@@ -41,7 +41,7 @@ services:
     depends_on:
       - pause
       - zookeeper
-    image: "zmstone/kafka:0.11"
+    image: "zmstone/kafka:1.1-cc"
     container_name: 'kafka2'
     ipc: container:pause
     network_mode: service:pause
@@ -57,7 +57,7 @@ services:
     depends_on:
       - pause
       - zookeeper
-    image: "zmstone/kafka:0.11"
+    image: "zmstone/kafka:1.1-cc"
     container_name: 'kafka3'
     ipc: container:pause
     network_mode: service:pause
@@ -76,7 +76,7 @@ services:
       - kafka1
       - kafka2
       - kafka3
-    image: "zmstone/kafka:0.11"
+    image: "zmstone/kafka:1.1-cc"
     container_name: 'kafka4'
     ipc: container:pause
     network_mode: service:pause

@@ -24,7 +24,7 @@ COPY server.jks /etc/kafka/server.jks
 COPY truststore.jks /etc/kafka/truststore.jks
 COPY jaas-plain.conf /etc/kafka/jaas-plain.conf
 COPY jaas-plain-scram.conf /etc/kafka/jaas-plain-scram.conf
-COPY cruise-control-metrics-reporter-0.1.68.jar /opt/kafka/libs/
+COPY cruise-control-metrics-reporter-0.1.69.jar /opt/kafka/libs/
 
 ENV PATH /opt/kafka/bin:$PATH
 
