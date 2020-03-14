@@ -1,5 +1,5 @@
 LIB = zmstone
-VERSIONS = 0.10.2.2 0.11.0.3 1.0.2 1.1.1 2.2.1
+VERSIONS = 0.10.2.2 0.11.0.3 1.0.2 1.1.1 2.2.1 2.4.0
 short_vsn = $(word 1,$(subst ., ,$1)).$(word 2,$(subst ., ,$1))
 
 .PHONY: all
