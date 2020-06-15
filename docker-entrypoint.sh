@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 
 ## run something other than zookeeper and kafka
 if [ "$1" != "run" ]; then
@@ -15,85 +15,56 @@ if [ "$2" != "kafka" ]; then
   exit 1
 fi
 
-## run kafka
-
-prop_file="/etc/kafka/server.properties"
-
-if [ ! -z "$BROKER_ID" ]; then
-  echo "broker id: $BROKER_ID"
-  sed -r -i "s/^(broker.id)=(.*)/\1=$BROKER_ID/g" $prop_file
+# backward compatible for topics creation
+if [ -n "${TOPICS:-}" ]; then
+  export KAFKA_CREATE_TOPICS="{TOPICS},${KAFKA_CREATE_TOPICS:-}"
 fi
 
+# backward compatible for (advertised) listener's config
 ipwithnetmask="$(ip -f inet addr show dev eth0 | awk '/inet / { print $2 }')"
 ipaddress="${ipwithnetmask%/*}"
 
-[ -z "$ADVERTISED_HOSTNAME" ] && ADVERTISED_HOSTNAME="${ipaddress}"
-[ -z "$PLAINTEXT_PORT" ] && PLAINTEXT_PORT=9092
-[ -z "$SSL_PORT" ] && SSL_PORT=9093
-[ -z "$SASL_SSL_PORT" ] && SASL_SSL_PORT=9095
-[ -z "$SASL_PLAINTEXT_PORT" ] && SASL_PLAINTEXT_PORT=9096
-[ -z "$ZOOKEEPER_CONNECT" ] && ZOOKEEPER_CONNECT="zookeeper:2181"
+HOST="${ADVERTISED_HOSTNAME:-$ipaddress}"
+PLAINTEXT_PORT="${PLAINTEXT_PORT:-9092}"
+SSL_PORT="${SSL_PORT:-9093}"
+SASL_PLAINTEXT_PORT="${SASL_PLAINTEXT_PORT:-9094}"
+SASL_SSL_PORT="${SASL_SSL_PORT:-9095}"
 
-ZOOKEEPER_HOST=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f1)
-ZOOKEEPER_IP=$(getent ahostsv4 $ZOOKEEPER_HOST | head -1 | awk '{ print $1 }')
-ZOOKEEPER_PORT=$(echo $ZOOKEEPER_CONNECT | cut -d':' -f2)
-
-until echo > /dev/tcp/$ZOOKEEPER_IP/$ZOOKEEPER_PORT; do
-  >&2 echo "zookeeper is not ready, sleep wait"
-  sleep 1
-done
-
-if [[ "$KAFKA_VERSION" = 0.9* ]]; then
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT/g" $prop_file
-  sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT/g" $prop_file
-else
-  sed -r -i "s/^(advertised.listeners)=(.*)/\1=PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL:\/\/$ADVERTISED_HOSTNAME:$SSL_PORT,SASL_SSL:\/\/$ADVERTISED_HOSTNAME:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/$ADVERTISED_HOSTNAME:$SASL_PLAINTEXT_PORT/g" $prop_file
-  sed -r -i "s/^(listeners)=(.*)/\1=PLAINTEXT:\/\/:$PLAINTEXT_PORT,SSL:\/\/:$SSL_PORT,SASL_SSL:\/\/:$SASL_SSL_PORT,SASL_PLAINTEXT:\/\/:$SASL_PLAINTEXT_PORT/g" $prop_file
-  echo "sasl.enabled.mechanisms=PLAIN" >> $prop_file
+if [ -z "${KAFKA_ADVERTISED_LISTENERS:-}" ]; then
+  export KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://$HOST:$PLAINTEXT_PORT,SSL://$HOST:$SSL_PORT,SASL_PLAINTEXT://$HOST:$SASL_PLAINTEXT_PORT,SASL_SSL://$HOST:$SASL_SSL_PORT"
+  export KAFKA_LISTENERS="PLAINTEXT://:$PLAINTEXT_PORT,SSL://:$SSL_PORT,SASL_PLAINTEXT://:$SASL_PLAINTEXT_PORT,SASL_SSL://:$SASL_SSL_PORT"
 fi
 
-sed -r -i "s/^zookeeper\.connect=.*/zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
-echo "sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512" >> $prop_file
-echo "offsets.topic.replication.factor=1" >> $prop_file
-echo "transaction.state.log.min.isr=1" >> $prop_file
-echo "transaction.state.log.replication.factor=1" >> $prop_file
-
-if [[ "$KAFKA_VERSION" = 0.9* ]]; then
-  JAAS_CONF=""
-elif [[ "$KAFKA_VERSION" = 0.10* ]]; then
-  JAAS_CONF="-Djava.security.auth.login.config=/etc/kafka/jaas-plain.conf"
-else
-  JAAS_CONF="-Djava.security.auth.login.config=/etc/kafka/jaas-plain-scram.conf"
+if [ -z "${KAFKA_SSL_KEYSTORE_LOCATION:-}" ]; then
+  # generate certs and set env
+  /opt/kafka/tls/generate-certs.sh
+  export KAFKA_SSL_KEYSTORE_LOCATION=/opt/kafka/tls/kafka.jks
+  export KAFKA_SSL_KEYSTORE_PASSWORD=nosecret
+  export KAFKA_SSL_KEY_PASSWORD=nosecret
+  export KAFKA_SSL_TRUSTSTORE_LOCATION=/opt/kafka/tls/truststore.jks
+  export KAFKA_SSL_TRUSTSTORE_PASSWORD=nosecret
+  export KAFKA_SSL_CLIENT_AUTH=none
+  export KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM=" "
 fi
 
-wait_for_kafka() {
-  echo '### waiting for kafka to be ready'
-  if ! kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --list >/dev/null 2>&1; then
-    wait_for_kafka
+export KAFKA_AUTO_CREATE_TOPICS_ENABLED="${KAFKA_AUTO_CREATE_TOPICS_ENABLED:-false}"
+export KAFKA_DELETE_TOPIC_ENABLED="${KAFKA_DELETE_TOPIC_ENABLED:-true}"
+export KAFKA_BROKER_ID="${KAFKA_BROKER_ID:-0}"
+export KAFKA_SASL_ENABLED_MECHANISMS="${KAFKA_SASL_ENABLED_MECHANISMS:-PLAIN,SCRAM-SHA-256,SCRAM-SHA-512}"
+export KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR="${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:-1}"
+export KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS="${KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS:-7}"
+export KAFKA_TRANSACTION_STATE_LOG_MIN_ISR="${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR:-1}"
+export KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR="${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR:-1}"
+
+if [ -z "${JAAS_CONF:-}" ]; then
+  if [[ "$KAFKA_VERSION" = 0.10* ]]; then
+    JAAS_CONF="-Djava.security.auth.login.config=/opt/kafka/sasl/jaas-plain.conf"
+  else
+    JAAS_CONF="-Djava.security.auth.login.config=/opt/kafka/sasl/jaas-plain-scram.conf"
   fi
-}
+fi
 
-create_topic() {
-  TOPIC_NAME="$1"
-  PARTITIONS="${2:-1}"
-  kafka-topics.sh --zookeeper "${ZOOKEEPER_CONNECT}" --create --partitions $PARTITIONS --replication-factor 1 --topic $TOPIC_NAME
-}
+export KAFKA_OPTS="${JAAS_CONF}"
 
-create_topics() {
-  wait_for_kafka
-  LINES=$(echo "$TOPICS" | tr ',' '\n')
-  for topic_partition in $LINES; do
-    topic="$(echo $topic_partition | cut -d: -f1)"
-    partitions="$(echo $topic_partition | cut -d: -f2)"
-    [ $partitions == "" ] && partitions=1
-    ## ignore error because the topic might be alredy there when working with a running zookeeper
-    create_topic $topic $partitions || true
-  done
-}
-
-# fork-start topic creator
-[ -z "$TOPICS" ] || create_topics &
-
-#-Djavax.net.debug=all
-KAFKA_HEAP_OPTS="-Xmx1G -Xms1G $JAAS_CONF" /opt/kafka/bin/kafka-server-start.sh $prop_file
-
+## run kafka
+/usr/bin/start-kafka.sh

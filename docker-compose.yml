@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   pause:
@@ -15,7 +15,7 @@ services:
   zookeeper:
     depends_on:
       - pause
-    image: "zmstone/kafka:1.1"
+    image: "zmstone/kafka:${KAFKA_VERSION:-1.1}"
     container_name: zookeeper
     command: run zookeeper
     ipc: container:pause
@@ -24,19 +24,13 @@ services:
     depends_on:
       - pause
       - zookeeper
-    image: "zmstone/kafka:1.1"
+    image: "zmstone/kafka:${KAFKA_VERSION:-1.1}"
     container_name: 'kafka'
     ipc: container:pause
     network_mode: service:pause
     environment:
-      ADVERTISED_HOSTNAME: localhost
-      ZOOKEEPER_CONNECT: "localhost:2181"
-      BROKER_ID: 1
-      PLAINTEXT_PORT: 9092
-      SSL_PORT: 9093
-      SASL_SSL_PORT: 9094
-      SASL_PLAINTEXT_PORT: 9095
-      TOPICS: "${TOPICS}"
+      KAFKA_ZOOKEEPER_CONNECT: "localhost:2181"
+      KAFKA_CREATE_TOPICS: "${TOPICS}"
 
 networks:
   pausenet:
