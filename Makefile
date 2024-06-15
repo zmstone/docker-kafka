@@ -10,11 +10,6 @@ scala_v = $(word 2, $(subst -, ,$(1)))
 kafka_v = $(word 3, $(subst -, ,$(1)))
 kafka_short_v = $(word 1, $(subst ., ,$(call kafka_v,$(1)))).$(word 2, $(subst ., ,$(call kafka_v,$(1))))
 
-# define kafka_short_v
-# $(eval KAFKA_FULL_V := $(call kafka_v,$(1)))
-# $(word 1, $(subst ., ,$(KAFKA_FULL_V))).$(word 2, $(subst ., ,$(KAFKA_FULL_V)))
-# endef
-
 .PHONY: all
 all: build
 
@@ -26,11 +21,11 @@ $(VERSIONS:%=build-%):
 	docker build \
 		--build-arg SCALA_VERSION=$(call scala_v,$@) \
 		--build-arg KAFKA_VERSION=$(call kafka_v,$@) \
-		-t $(LIB)/kafka/$(IMAGE_VERSION):$(call kafka_short_v,$@) .
+		-t $(LIB)/kafka:$(IMAGE_VERSION)-$(call kafka_short_v,$@) .
 
 .PHONY: push
 push: $(VERSIONS:%=push-%)
 
 .PHONY: $(VERSIONS:%=push-%)
 $(VERSIONS:%=push-%):
-	docker push $(LIB)/kafka/$(IMAGE_VERSION):$(call kafka_short_v,$@)
+	docker push $(LIB)/kafka:$(IMAGE_VERSION)-$(call kafka_short_v,$@)
