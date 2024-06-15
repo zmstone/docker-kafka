@@ -5,7 +5,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
-ENV SCALA_VERSION 2.11
+ARG SCALA_VERSION
+ENV SCALA_VERSION ${SCALA_VERSION}
 
 ARG KAFKA_VERSION
 ENV KAFKA_VERSION ${KAFKA_VERSION}
