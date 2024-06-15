@@ -33,4 +33,4 @@ push: $(VERSIONS:%=push-%)
 
 .PHONY: $(VERSIONS:%=push-%)
 $(VERSIONS:%=push-%):
-	docker push $(LIB)/kafka:$(call short_vsn,$(subst push-,,$@))
+	docker push $(LIB)/kafka/$(IMAGE_VERSION):$(call kafka_short_v,$@)
