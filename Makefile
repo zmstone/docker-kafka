@@ -1,5 +1,5 @@
 LIB = zmstone
-IMAGE_VERSION=1.0
+IMAGE_VERSION=1.1
 VERSIONS = 2.11-0.9.0.1 \
 		   2.11-0.10.2.2 \
 		   2.11-0.11.0.3 \
@@ -14,11 +14,18 @@ kafka_short_v = $(word 1, $(subst ., ,$(call kafka_v,$(1)))).$(word 2, $(subst .
 .PHONY: all
 all: build
 
+.PHONY: clean
+clean:
+	git clean -fdx
+
+truststore.jks:
+	./generate-certs.sh
+
 .PHONY: build
 build: $(VERSIONS:%=build-%)
 
 .PHONY: $(VERSIONS:%=build-%)
-$(VERSIONS:%=build-%):
+$(VERSIONS:%=build-%): truststore.jks
 	docker build \
 		--build-arg SCALA_VERSION=$(call scala_v,$@) \
 		--build-arg KAFKA_VERSION=$(call kafka_v,$@) \
