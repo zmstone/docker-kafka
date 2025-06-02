@@ -1,4 +1,5 @@
-FROM openjdk:8-jre
+ARG BASE_JDK_IMAGE
+FROM ${BASE_JDK_IMAGE}
 
 RUN apt-get update && \
     apt-get install -y zookeeper wget supervisor dnsutils && \
