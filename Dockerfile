@@ -2,7 +2,7 @@ ARG BASE_JDK_IMAGE
 FROM ${BASE_JDK_IMAGE}
 
 RUN apt-get update && \
-    apt-get install -y zookeeper wget supervisor dnsutils && \
+    apt-get install -y zookeeper wget supervisor dnsutils net-tools && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
