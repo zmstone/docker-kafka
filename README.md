@@ -10,17 +10,25 @@ make
 
 ## Run
 
+For Kafka 3.3 or later:
+
 ```sh
-sudo docker-compose up -d
+docker compose -f docker-compose-kraft.yml up -d
+```
+
+For earlier versions:
+
+```sh
+docker compose up -d
 ```
 
 Set `TOPICS` environment variable to have them created.
 
 ```sh
-sudo TOPICS='topic-1:1,topic-2:2' docker-compose up -d
+TOPICS='topic-1:1,topic-2:2' docker compose up -d
 ```
 
-### Create Topic when containers are already up
+### Create Topic when containers are ready
 
 ```
 create_topic() {
@@ -28,7 +36,7 @@ create_topic() {
   PARTITIONS="${2:-1}"
   REPLICAS="${3:-1}"
   CMD="kafka-topics.sh --zookeeper localhost --create --partitions $PARTITIONS --replication-factor $REPLICAS --topic $TOPIC_NAME"
-  sudo docker-compose exec kafka bash -c "$CMD"
+  docker exec kafka-1 bash -c "$CMD"
 }
 create_topic "test-topic"
 ```
@@ -36,5 +44,6 @@ create_topic "test-topic"
 ### Add sasl-scram Credentials (kafka 0.11 or later)
 
 ```
-sudo docker-compose exec kafka kafka-configs.sh --zookeeper localhost:2181 --alter --add-config 'SCRAM-SHA-256=[iterations=8192,password=ecila],SCRAM-SHA-512=[password=ecila]' --entity-type users --entity-name alice
+docker exec kafka-1 kafka-configs.sh --zookeeper localhost:2181 --alter --add-config 'SCRAM-SHA-256=[iterations=8192,password=ecila]' --entity-type users --entity-name alice
+docker exec kafka-1 kafka-configs.sh --zookeeper localhost:2181 --alter --add-config 'SCRAM-SHA-512=[password=ecila]' --entity-type users --entity-name alice
 ```
