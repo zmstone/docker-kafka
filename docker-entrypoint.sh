@@ -67,7 +67,7 @@ if [ "$KAFKA_MAJOR" -lt 3 ]; then
 else
   # KRaft mode: Add required configs
   echo "node.id=${BROKER_ID}" >> "$prop_file"
-  echo "process.roles=broker,controller" >> "$prop_file"
+  echo "process.roles=${ROLES}" >> "$prop_file"
   echo "controller.listener.names=CONTROLLER" >> "$prop_file"
   echo "controller.quorum.voters=${VOTERS}" >> "$prop_file"
   echo "inter.broker.listener.name=PLAINTEXT" >> "$prop_file"

@@ -7,7 +7,7 @@ networks:
 
 services:
   kafka_1:
-    image: "zmstone/kafka:1.1-${KAFKA_VERSION}"
+    image: "zmstone/kafka:${KAFKA_IMAGE_VERSION}"
     container_name: 'kafka-1'
     networks:
       kafka-net:
@@ -19,6 +19,7 @@ services:
       - "9095:9095"
     environment:
       BROKER_ID: 1
+      ROLES: broker,controller
       CONTROLLER_PORT: 9090
       INNER_PORT: 9091
       PLAINTEXT_PORT: 9092
@@ -29,7 +30,7 @@ services:
       INNER_HOSTNAME: ${KAFKA_1_IP}
       VOTERS: 1@${KAFKA_1_IP}:9090,2@${KAFKA_2_IP}:9090
   kafka_2:
-    image: "zmstone/kafka:1.1-${KAFKA_VERSION}"
+    image: "zmstone/kafka:${KAFKA_IMAGE_VERSION}"
     container_name: 'kafka-2'
     networks:
       kafka-net:
@@ -41,6 +42,7 @@ services:
       - "9195:9095"
     environment:
       BROKER_ID: 2
+      ROLES: broker,controller
       CONTROLLER_PORT: 9090
       INNER_PORT: 9091
       PLAINTEXT_PORT: 9092
