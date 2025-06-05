@@ -49,6 +49,8 @@ if [ "$KAFKA_MAJOR" -lt 3 ]; then
     done
 fi
 
+ROLES="${ROLES:-broker,controller}"
+
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
   sed -r -i "s#^(advertised.listeners)=(.*)#\1=PLAINTEXT://$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL://$ADVERTISED_HOSTNAME:$SSL_PORT#g" $prop_file
   sed -r -i "s#^(listeners)=(.*)#\1=PLAINTEXT://:$PLAINTEXT_PORT,SSL://:$SSL_PORT#g" $prop_file
@@ -58,22 +60,24 @@ elif [ "$KAFKA_MAJOR" -lt 3 ]; then
   echo "sasl.enabled.mechanisms=PLAIN" >> $prop_file
 else
   sed -r -i "s#^(advertised.listeners)=(.*)#\1=INNER://${INNER_HOSTNAME}:${INNER_PORT},PLAINTEXT://$ADVERTISED_HOSTNAME:$PLAINTEXT_PORT,SSL://$ADVERTISED_HOSTNAME:$SSL_PORT,SASL_SSL://$ADVERTISED_HOSTNAME:$SASL_SSL_PORT,SASL_PLAINTEXT://$ADVERTISED_HOSTNAME:$SASL_PLAINTEXT_PORT#g" $prop_file
-  sed -r -i "s#^(listeners)=(.*)#\1=PLAINTEXT://:${PLAINTEXT_PORT},SSL://:${SSL_PORT},SASL_SSL://:${SASL_SSL_PORT},SASL_PLAINTEXT://:${SASL_PLAINTEXT_PORT},INNER://:${INNER_PORT},CONTROLLER://:${CONTROLLER_PORT}#g" $prop_file
+  if [[ "$ROLES" == *controller* ]]; then
+    sed -r -i "s#^(listeners)=(.*)#\1=PLAINTEXT://:${PLAINTEXT_PORT},SSL://:${SSL_PORT},SASL_SSL://:${SASL_SSL_PORT},SASL_PLAINTEXT://:${SASL_PLAINTEXT_PORT},INNER://:${INNER_PORT},CONTROLLER://:${CONTROLLER_PORT}#g" $prop_file
+  else
+    sed -r -i "s#^(listeners)=(.*)#\1=PLAINTEXT://:${PLAINTEXT_PORT},SSL://:${SSL_PORT},SASL_SSL://:${SASL_SSL_PORT},SASL_PLAINTEXT://:${SASL_PLAINTEXT_PORT},INNER://:${INNER_PORT}#g" $prop_file
+  fi
   echo "sasl.enabled.mechanisms=PLAIN" >> $prop_file
 fi
 
 if [ "$KAFKA_MAJOR" -lt 3 ]; then
   sed -r -i "s/^zookeeper\.connect=.*/zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
 else
-  # KRaft mode: Add required configs
   echo "node.id=${BROKER_ID}" >> "$prop_file"
   echo "process.roles=${ROLES}" >> "$prop_file"
-  echo "controller.listener.names=CONTROLLER" >> "$prop_file"
   echo "controller.quorum.voters=${VOTERS}" >> "$prop_file"
-  echo "inter.broker.listener.name=PLAINTEXT" >> "$prop_file"
   echo "log.dirs=/tmp/kraft-combined-logs" >> "$prop_file"
-  echo "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_SSL:SASL_SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,CONTROLLER:PLAINTEXT,INNER:PLAINTEXT" >> "$prop_file"
   echo "inter.broker.listener.name=INNER" >> "$prop_file"
+  echo "controller.listener.names=CONTROLLER" >> "$prop_file"
+  echo "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_SSL:SASL_SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,CONTROLLER:PLAINTEXT,INNER:PLAINTEXT" >> "$prop_file"
   CLUSTER_ID="cluster123"
   kafka-storage.sh format --config $prop_file --cluster-id $CLUSTER_ID --ignore-formatted
 fi
