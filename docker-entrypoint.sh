@@ -75,7 +75,7 @@ else
   echo "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_SSL:SASL_SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,CONTROLLER:PLAINTEXT,INNER:PLAINTEXT" >> "$prop_file"
   echo "inter.broker.listener.name=INNER" >> "$prop_file"
   CLUSTER_ID="cluster123"
-  kafka-storage.sh format --config $prop_file --cluster-id $CLUSTER_ID
+  kafka-storage.sh format --config $prop_file --cluster-id $CLUSTER_ID --ignore-formatted
 fi
 echo "sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-256,SCRAM-SHA-512" >> $prop_file
 echo "offsets.topic.replication.factor=1" >> $prop_file
