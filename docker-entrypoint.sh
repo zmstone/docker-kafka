@@ -71,6 +71,7 @@ fi
 if [ "$KAFKA_MAJOR" -lt 3 ]; then
   sed -r -i "s/^zookeeper\.connect=.*/zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
 else
+  sed -r -i "s/^zookeeper\.connect=.*/#zookeeper.connect=${ZOOKEEPER_CONNECT}/" $prop_file
   echo "node.id=${BROKER_ID}" >> "$prop_file"
   echo "process.roles=${ROLES}" >> "$prop_file"
   echo "controller.quorum.voters=${VOTERS}" >> "$prop_file"
