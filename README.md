@@ -28,6 +28,12 @@ Set `TOPICS` environment variable to have them created.
 TOPICS='topic-1:1,topic-2:2' docker compose up -d
 ```
 
+Set `AUTO_CREATE_TOPICS_ENABLE` environment variable to control automatic topic creation (default: `false`).
+
+```sh
+AUTO_CREATE_TOPICS_ENABLE=true docker compose up -d
+```
+
 ### Create Topic when containers are ready
 
 ```

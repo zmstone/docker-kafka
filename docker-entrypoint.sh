@@ -24,6 +24,15 @@ if [ ! -z "$BROKER_ID" ]; then
   sed -r -i "s/^(broker.id)=(.*)/\1=$BROKER_ID/g" $prop_file
 fi
 
+if [ ! -z "$AUTO_CREATE_TOPICS_ENABLE" ]; then
+  echo "auto.create.topics.enable: $AUTO_CREATE_TOPICS_ENABLE"
+  if grep -q "^auto.create.topics.enable=" $prop_file; then
+    sed -r -i "s/^(auto.create.topics.enable)=(.*)/\1=$AUTO_CREATE_TOPICS_ENABLE/g" $prop_file
+  else
+    echo "auto.create.topics.enable=$AUTO_CREATE_TOPICS_ENABLE" >> $prop_file
+  fi
+fi
+
 ipwithnetmask="$(ip -f inet addr show dev eth0 | awk '/inet / { print $2 }')"
 ipaddress="${ipwithnetmask%/*}"
 
