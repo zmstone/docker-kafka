@@ -16,6 +16,7 @@ kafka_major = $(word 1, $(subst ., ,$(call kafka_v,$1)))
 jdk_for_kafka = $(if $(filter 4,$(call kafka_major,$1)),17, \
 				  $(if $(filter 3,$(call kafka_major,$1)),11, \
 				    8))
+base_image_for_jdk = $(if $(filter 8,$(strip $(1))),eclipse-temurin:8-jdk-jammy,eclipse-temurin:$(strip $(1))-jdk)
 
 .PHONY: all
 all: build
@@ -35,7 +36,7 @@ $(VERSIONS:%=build-%): truststore.jks
 	docker build \
 		--build-arg SCALA_VERSION=$(call scala_v,$@) \
 		--build-arg KAFKA_VERSION=$(call kafka_v,$@) \
-		--build-arg BASE_JDK_IMAGE=openjdk:$(strip $(call jdk_for_kafka,$@))-jdk-slim \
+		--build-arg BASE_JDK_IMAGE=$(call base_image_for_jdk,$(call jdk_for_kafka,$@)) \
 		-t $(LIB)/kafka:$(IMAGE_VERSION)-$(call kafka_short_v,$@) .
 
 .PHONY: push
