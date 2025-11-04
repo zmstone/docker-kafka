@@ -1,5 +1,5 @@
 LIB = zmstone
-IMAGE_VERSION=1.2.0
+IMAGE_VERSION=1.2.1
 VERSIONS = 2.11-0.9.0.1 \
 		   2.11-0.10.2.2 \
 		   2.11-0.11.0.3 \
