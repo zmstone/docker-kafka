@@ -96,6 +96,29 @@ echo "offsets.topic.replication.factor=1" >> $prop_file
 echo "transaction.state.log.min.isr=1" >> $prop_file
 echo "transaction.state.log.replication.factor=1" >> $prop_file
 
+# Apply generic environment variable mapping: KAFKA_config__name=value -> config.name=value
+for env_var in $(env | grep -E '^KAFKA_' | cut -d= -f1); do
+  # Strip KAFKA_ prefix
+  config_key="${env_var#KAFKA_}"
+  # Replace __ with .
+  config_key="${config_key//__/.}"
+  # Get the value
+  config_value="${!env_var}"
+
+  # Update or add the property
+  if grep -q "^${config_key}=" $prop_file; then
+    # Property exists, update it
+    # Escape special regex characters in key for matching (escape . * ^ $ [ ( ) + ? { | \)
+    escaped_key=$(printf '%s\n' "$config_key" | sed 's/[\.*^$\[()+\?{|\\]/\\&/g')
+    # Escape special sed replacement characters in value (escape \ & / and newlines)
+    escaped_value=$(printf '%s\n' "$config_value" | sed 's/[\\\/&]/\\&/g' | tr '\n' ' ')
+    sed -i "s|^${escaped_key}=.*|${escaped_key}=${escaped_value}|" $prop_file
+  else
+    # Property doesn't exist, add it
+    echo "${config_key}=${config_value}" >> $prop_file
+  fi
+done
+
 if [[ "$KAFKA_VERSION" = 0.9* ]]; then
   JAAS_CONF=""
 elif [[ "$KAFKA_VERSION" = 0.10* ]]; then
